@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Post{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-10">
+            <form method="post">
+                <div class="form-group col-md-4">
+                    <label for="title">Title</label>
+                    <input class="form-control" name="title" id="title" required>
+                </div>
+                <br>
+                <div class="form-group col-md-12">
+                    <label for="body">Body</label>
+                    <textarea class="form-control" name="body" id="body" cols="30" rows="10" required></textarea>
+                </div>
+                <button type="submit" class="f btn btn-success">Publish</button>
+            </form>
+        </div>
+
+        <div class="col-2">
+            <div class="row mb-3">
+                <label for="file" class="form-label">Upload Images :</label>
+                <input class="form-control form-control-sm" id="file" type="file" name="file">
+                <button type="input" class="btn btn-primary" onclick="file_upload()">Upload</button>
+            </div>
+            <div class="row">
+                <table class="table table-sm table-responsive-sm">
+                    <thead>
+                      <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Link</th>
+                      </tr>
+                    </thead>
+                    <tbody id ="imageList">
+                        {% for image in images %}
+                            <tr>
+                                <th scope="row" style="word-break: break-word;">{{image["name"]}}</th>
+                                <td class="text-wrap" style="word-break: break-word;">{{image["link"]}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                  </table>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    function file_upload(){
+        var imageList = $('#imageList');
+
+        function newImageLink(name, link){
+            return '<tr>'+
+                '<th scope="row" style="word-break: break-word;">'+name+'</th>'+
+                '<td style="word-break: break-word;">'+link+'</td>'+
+            '</tr>'
+        }
+
+        var fd = new FormData();
+        var fileUpload = $('#file')[0].files;
+       
+        fd.append('file', fileUpload[0]);
+
+        $.ajax({
+            type: 'POST',
+            url: '/upload_file',
+            data: fd,
+            dataType: 'json',
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                imageList.append(newImageLink(fileUpload[0].name, response.link));
+            },
+            error: function(error) {
+
+                console.log(error); 
+            }
+        });
+
+        }
+</script>
+
+    
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Register{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+    <div class="form-group col-md-3 form-floating">
+        <input class="form-control mb-3" name="username" id="username" placeholder="username" required autofocus>
+        <label for="username" class="mb-2">Username</label>
+    </div>
+    <div class="form-group col-md-3 form-floating">
+        <input class="form-control mb-3" type="password" name="password" id="password" placeholder="password" required>
+        <label for="password" class="mb-2">Password</label>
+    </div>
+    <div class="form-group form-check">
+        <input class="form-check-input" type="radio" name="gender" id="male" value="male" required>Male</input> <br>
+        <input class="form-check-input" type="radio" name="gender" id="female" value="female" required>Female</input>
+    </div>
+
+    <button type="submit" class="f btn btn-success">Sign In</button>
+</form>
+{% endblock %}

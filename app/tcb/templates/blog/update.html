@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div class="row">
+  <h1 class="display-3">{% block title %} <strong>Edit:</strong>  {{ post['title'] }} {% endblock %}</h1>
+  <h6 class="card-subtitle mb-2 text-muted lead">
+      By {{ post['username'] }} on <em>{{ post['created'].strftime('%Y-%m-%d') }}</em>
+  </h6>
+</div>
+<hr>
+  <form method="post" action="{{url_for('blog.delete', id=post['id'])}}">
+    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?');">Delete</button>
+  </form>
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-10">
+      <form method="post" class="mt-5">
+          <div class="form-group col-md-4">
+              <label for="title">Title</label>
+              <input class="form-control" name="title" id="title" value="{{ request.form['title'] or post['title'] }}" required>
+          </div>
+          <br>
+          <div class="form-group col-md-12">
+              <label for="body">Body</label> <br>
+              <textarea class="form-control" name="body" id="body" cols="30" rows="10" required>{{ request.form['body'] or post['body'] }}</textarea>
+          </div>
+          <button type="submit" class="f btn btn-success">Publish</button>
+      </form>
+    </div>
+
+    <div class="col-2">
+      <div class="row mb-3">
+          <label for="file" class="form-label">Upload Images :</label>
+          <input class="form-control form-control-sm" id="file" type="file" name="file">
+          <button type="input" class="btn btn-primary" onclick="file_upload()">Upload</button>
+      </div>
+      <div class="row">
+          <table class="table table-sm table-responsive-sm">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Link</th>
+                </tr>
+              </thead>
+              <tbody id ="imageList">
+                  {% for image in post["images"] %}
+                      <tr>
+                          <th scope="row" style="word-break: break-word;">{{image["name"]}}</th>
+                          <td class="text-wrap" style="word-break: break-word;">{{image["link"]}}</td>
+                      </tr>
+                  {% endfor %}
+              </tbody>
+            </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+  <script>
+    function file_upload(){
+        var imageList = $('#imageList');
+
+        function newImageLink(name, link){
+            return '<tr>'+
+                '<th scope="row" style="word-break: break-word;">'+name+'</th>'+
+                '<td style="word-break: break-word;">'+link+'</td>'+
+            '</tr>'
+        }
+
+        var fd = new FormData();
+        var fileUpload = $('#file')[0].files;
+        
+        fd.append('file', fileUpload[0]);
+
+        $.ajax({
+            type: 'POST',
+            url: '/upload_file',
+            data: fd,
+            dataType: 'json',
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                imageList.append(newImageLink(fileUpload[0].name, response.link));
+            },
+            error: function(error) {
+
+                console.log(error); 
+            }
+        });
+
+        }
+  </script>
+{% endblock %}

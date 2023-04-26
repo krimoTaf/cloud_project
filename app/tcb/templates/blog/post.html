@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  
+    <div class="row">
+        <h1 class="display-3">{% block title %} {{ post['title'] }} {% endblock %}</h1>
+        <h6 class="card-subtitle mb-2 text-muted lead">
+            <img src={{ post['avatar'] }} alt="Avatar" class="avatar">
+            By {{ post['username'] }} on <em>{{ post['created'].strftime('%Y-%m-%d, %H:%M') }}</em>
+        </h6>
+    </div>
+    <hr>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-10">               
+            <div class="card-text">
+                {{ post['body']|safe }}
+            </div>
+            <br><br>
+            <hr><hr>
+
+
+            <div class="row">
+                <h2 class="h2" id="comment">Comments :</h2>
+                <div class="container mt-2 mb-2">
+                    <div class="row">
+                        <div class="d-flex flex-column col-md-8">
+                            <div class="coment-bottom bg-white p-2 px-4">
+                                {% if g.user %}
+                                    <div class="d-flex  mt-4 mb-4">
+                                        <img class="img-fluid img-responsive rounded-circle mx-2" 
+                                        src="{{ g.user['avatar'] }}" width="38">
+                                        <textarea id="commentBody" type="text" class="form-control" rows="1" placeholder="Add comment"></textarea>
+                                        <button id="addComment" class="btn btn-primary mx-2" type="button">Comment</button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="comments" class="container mt-2 mb-2">
+                    {% for comment in post['comments'] %}
+                    <div id="{{comment['id']}}" class="d-flex row">
+                        <div class="d-flex flex-column col-md-10">
+                            <div class="coment-bottom bg-white p-2 px-4">
+                                <div class="commented-section mt-2">
+                                    <div class="d-flex flex-row align-items-center commented-user">
+                                        <img class="img-fluid img-responsive rounded-circle mx-2 mb-2" 
+                                        src={{ comment['avatar'] }} width="38">
+                                        <h5 class="mx-2">{{ comment['username']}}</h5>
+                                        <span class="dot mb-1"></span>
+                                        <span class="mb-1 ml-2">
+                                            {{ comment['created'].strftime('%Y-%m-%d, %H:%M')}}
+                                        </span>
+                                        {% if g.user['id'] == comment['user_id'] %}
+                                         <button type="submit" class="btn btn-danger btn-sm mb-1 ml-2 mx-2" 
+                                         onclick="delete_comment({{comment['id']}},{{comment['user_id']}});">Delete</button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mx-5">
+                                        <span>
+                                            {{ comment['body'] | safe}}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+                
+            </div>
+        </div>
+
+
+        <div class="col-2 text-center">
+            <div class="sticky-top">
+                {% if g.user['id'] == post['author_id'] %}  
+        
+                    <div>
+                        <a class="btn btn-primary mt-3" href="{{ url_for('blog.create') }}">New</a>
+                        <br><br>
+                        <a href="{{ url_for('blog.update', id=post['id']) }}" class="btn btn-warning">Edit</a>
+                        <br><br>
+                        <form method="post" action="{{url_for('blog.delete', id=post['id'])}}">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?');">Delete</button>
+                        </form>
+                        <br>
+                    </div>
+                <hr>
+                {% endif %}
+
+                <br>
+
+                <button id="like_{{post['id']}}" type="button" class="btn btn-link"  
+                    {% if g.user %} onclick="like(this.id)" style="cursor: pointer;" {%else%} style="cursor: default;" {%endif%}
+                    >
+                    <div class="row text-center mt-2">
+                    {% if post['is_liked'] %} 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="red" class="bi bi-heart-fill" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                        </svg>
+                    {%else%}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="red" class="bi bi-heart" viewBox="0 0 16 16">
+                            <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                        </svg>
+                    {% endif %}
+                    </div>
+                </button>
+                <p style="color: red;font-size:0.8em; margin-top: -9px;">{{ post['nb_likes'] }}</p>
+
+                <button id="comment_{{post['id']}}" type="button" class="btn btn-link" 
+                onclick="location.href = '#comment';">
+                    <div class="row text-center mt-2">
+                    {% if (post['nb_comment'] > 0) %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="black" class="bi bi-chat-square-text-fill" viewBox="0 0 16 16">
+                            <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.5a1 1 0 0 0-.8.4l-1.9 2.533a1 1 0 0 1-1.6 0L5.3 12.4a1 1 0 0 0-.8-.4H2a2 2 0 0 1-2-2V2zm3.5 1a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9zm0 2.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/>
+                        </svg>
+                    {%else%}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="black" class="bi bi-chat-square-text" viewBox="0 0 16 16">
+                            <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2.5a2 2 0 0 0-1.6.8L8 14.333 6.1 11.8a2 2 0 0 0-1.6-.8H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2.5a1 1 0 0 1 .8.4l1.9 2.533a1 1 0 0 0 1.6 0l1.9-2.533a1 1 0 0 1 .8-.4H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                            <path d="M3 3.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 6a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 6zm0 2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+
+                    {% endif %}
+                    </div>
+                </button>
+                <p style="color: black;font-size:0.8em; margin-top: -9px;">{{ post['nb_comment'] }}</p>
+
+
+
+                <div class="row text-center mt-2">
+                    <div class="col">
+                        <button id="share_{{post['id']}}" type="button" class="btn btn-link btn-sm " onclick="copyText(this.id)" 
+                        value="{{ url_for('blog.read', id=post['id'], _external=True) }}"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Copied to clipeboard" >
+
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="blue" class="bi bi-share" viewBox="0 0 16 16">
+                                <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+                            </svg>
+
+                        </button>
+                    </div>
+            
+                </div>
+            
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+    $(document).ready(function(){
+        $('[data-bs-toggle="tooltip"]').tooltip(
+            { placement : "bottom", trigger: "click" }
+        );
+
+        {% if g.user %}
+            $( "#addComment" ).click(function() {
+                var comment = $('#commentBody');
+                var comments = $('#comments');
+
+                const date = new Date().toLocaleString('fr-FR', {
+                    timeZone: 'Europe/Paris',
+                    hourCycle: 'h23',
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }).replaceAll('/','-').replace(' ', ', ');
+
+
+                function newCommentHTML(comment_id, user_id, date, value) {
+                    return '<div id="'+comment_id   +'" class="d-flex row">' +
+                        '<div class="d-flex flex-column col-md-10">' +
+                            '<div class="coment-bottom bg-white p-2 px-4">' + 
+                                '<div class="commented-section mt-2">' +
+                                    '<div class="d-flex flex-row align-items-center commented-user">' +
+                                        '<img class="img-fluid img-responsive rounded-circle mx-2 mb-2" src="{{ g.user['avatar'] }}" width="38">' +
+                                        '<h5 class="mx-2">{{ g.user["username"]}}</h5>' +
+                                        '<span class="dot mb-1"></span>' +
+                                        '<span class="mb-1 ml-2">' +
+                                        date +
+                                        '</span>' +
+                                        '<button type="submit" class="btn btn-danger btn-sm mb-1 ml-2 mx-2" onclick="delete_comment('+comment_id+', '+user_id+');">Delete</button>'+
+                                    '</div>' +
+                                    '<div class="mx-5">' +
+                                        '<span>' +
+                                            value +
+                                        '</span>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/comment',
+                    data: {
+                        post_id: {{post['id']}},
+                        user_id: {{g.user['id']}},
+                        body : comment.val()
+                    },
+                    success: function(response) {
+                        comments.append(newCommentHTML(response['comment_id'],response['user_id'], date, comment.val()) );
+                        comment.val('');
+                    },
+                    error: function(error) {
+                        console.log(error);
+                        console.log("no"); 
+                    }
+                });
+
+
+
+            });
+
+        {% endif %}
+
+        
+    });
+
+    function delete_comment(comment_id, user_id){
+        $.ajax({
+            type: 'POST',
+            url: '/delete_comment',
+            data: {
+                id: comment_id,
+                user_id: user_id
+            },
+            success: function(response) {
+                $("#"+comment_id).remove();
+
+                console.log(response);
+            },
+            error: function(error) {
+                console.log(error); 
+            }
+        });
+    }
+
+    function copyText(button_id) {
+        e = $('#'+button_id);
+        post_link = e.val();
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(post_link);
+
+        } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = post_link;
+
+        // Move textarea out of the viewport so it's not visible
+        textArea.style.position = "absolute";
+        textArea.style.left = "-999999px";
+
+        document.body.prepend(textArea);
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+        } catch (error) {
+            console.error(error);
+        } finally {
+            textArea.remove();
+        }
+        }
+
+        setTimeout(function(){
+            e.tooltip("hide");
+            }, 1000);
+        
+       
+    }
+
+    {% if g.user %}
+    function like(button_id){
+        var liked = "M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z";
+        var disliked = "m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"
+        
+        icon = $('#'+button_id+ "> div > svg > path");
+        nb_like = $('#'+button_id).next()
+        
+        if (icon.attr("d") == liked){
+            icon.attr("d", disliked);
+            nb_like.text(parseInt(nb_like.text()) - 1+ "");
+
+            $.ajax({
+                type: 'POST',
+                url: '/dislike',
+                data: {
+                    post_id: parseInt(button_id.split('_')[1]),
+                    user_id: {{g.user['id']}}
+                  },
+                success: function(response) {
+                    console.log(response);  
+                },
+                error: function(error) {
+                    console.log(error); 
+                }
+            });
+
+        }else{
+            icon.attr("d", liked);
+            nb_like.text(parseInt(nb_like.text()) + 1+ "");
+
+            $.ajax({
+                type: 'POST',
+                url: '/like',
+                data: {
+                    post_id: parseInt(button_id.split('_')[1]),
+                    user_id: {{g.user['id']}}
+                  },
+                success: function(response) {
+                    console.log(response);  
+                },
+                error: function(error) {
+                    console.log(error); 
+                }
+            });
+        }
+
+    }
+    {% endif %}
+
+
+</script>
+    
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Log In{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+<form method="post">
+  <div class="form-group col-md-3 align-self-center form-floating">
+      <input class="form-control mb-3" name="username" id="username" placeholder="username" autofocus required>
+      <label for="username">Username</label>
+  </div>
+  <div class="form-group col-md-3 form-floating">
+      <input class="form-control mb-3" type="password" name="password" id="password" placeholder="password" required>
+      <label for="password">Password</label>
+  </div>
+  <button type="submit" class="f btn btn-lg btn-success">Log In</button>
+</form>
+  
+{% endblock %}
+
